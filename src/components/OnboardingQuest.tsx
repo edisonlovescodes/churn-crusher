@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Circle, Trophy, Play, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 interface QuestStep {
     id: string;
@@ -15,12 +17,13 @@ interface QuestStep {
 }
 
 export function OnboardingQuest() {
+    const { userId } = useCurrentUser();
     const [steps, setSteps] = useState<QuestStep[]>([
         {
             id: "1",
             title: "Join the Inner Circle",
             description: "Connect with other members in our private Discord.",
-            completed: true,
+            completed: false,
             type: "link",
         },
         {
@@ -43,22 +46,66 @@ export function OnboardingQuest() {
     const [activeVideo, setActiveVideo] = useState<boolean>(false);
     const [videoProgress, setVideoProgress] = useState(0);
 
+    // Fetch progress from Supabase
+    useEffect(() => {
+        if (!userId) return;
+
+        async function fetchProgress() {
+            const { data, error } = await supabase
+                .from('quest_progress')
+                .select('step_id')
+                .eq('user_id', userId)
+                .eq('quest_id', 'onboarding');
+
+            if (error) {
+                console.error('Error fetching progress:', error);
+                return;
+            }
+
+            if (data) {
+                const completedStepIds = new Set(data.map(p => p.step_id));
+                setSteps(prev => prev.map(step => ({
+                    ...step,
+                    completed: completedStepIds.has(step.id)
+                })));
+            }
+        }
+
+        fetchProgress();
+    }, [userId]);
+
+    const saveProgress = async (stepId: string) => {
+        if (!userId) return;
+
+        const { error } = await supabase
+            .from('quest_progress')
+            .insert({
+                user_id: userId,
+                quest_id: 'onboarding',
+                step_id: stepId,
+                completed_at: new Date().toISOString()
+            });
+
+        if (error) console.error('Error saving progress:', error);
+    };
+
     const progress = (steps.filter((s) => s.completed).length / steps.length) * 100;
 
-    const handleStepClick = (step: QuestStep) => {
+    const handleStepClick = async (step: QuestStep) => {
         if (step.completed) return;
 
         if (step.type === "video") {
             setActiveVideo(true);
             setVideoProgress(0);
         } else {
-            // For non-video steps, we still use the "Honor System" or simple link click for now
-            toggleStep(step.id);
+            // For non-video steps, mark as complete immediately (Honor System)
+            await completeStep(step.id);
         }
     };
 
-    const toggleStep = (id: string) => {
-        setSteps(steps.map((s) => (s.id === id ? { ...s, completed: !s.completed } : s)));
+    const completeStep = async (id: string) => {
+        setSteps(steps.map((s) => (s.id === id ? { ...s, completed: true } : s)));
+        await saveProgress(id);
     };
 
     // Simulate Video Playback
@@ -78,12 +125,12 @@ export function OnboardingQuest() {
             // Video finished
             setTimeout(() => {
                 setActiveVideo(false);
-                // Mark step 3 as complete
-                setSteps(steps.map((s) => (s.id === "3" ? { ...s, completed: true } : s)));
+                completeStep("3");
             }, 1000);
         }
         return () => clearInterval(interval);
-    }, [activeVideo, videoProgress, steps]);
+    }, [activeVideo, videoProgress, steps]); // Added steps dependency to ensure completeStep has latest state if needed, though completeStep uses ID.
+
 
     return (
         <>
@@ -92,7 +139,7 @@ export function OnboardingQuest() {
                     <motion.div
                         className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
                         initial={{ width: 0 }}
-                        animate={{ width: `${progress}%` }}
+                        animate={{ width: `${progress}% ` }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
                     />
                 </div>
@@ -198,7 +245,7 @@ export function OnboardingQuest() {
                                 <div className="absolute bottom-0 left-0 w-full h-1 bg-white/20">
                                     <motion.div
                                         className="h-full bg-primary"
-                                        style={{ width: `${videoProgress}%` }}
+                                        style={{ width: `${videoProgress}% ` }}
                                     />
                                 </div>
                             </div>
