@@ -134,27 +134,29 @@ export function OnboardingQuest() {
 
     return (
         <>
-            <div className="glass-panel rounded-2xl p-6 w-full max-w-md relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-secondary">
-                    <motion.div
-                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progress}% ` }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                    />
-                </div>
-
-                <div className="flex items-center justify-between mb-6 mt-2">
+            <div className="card-panel p-8 w-full max-w-2xl">
+                <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                            <Trophy className="w-5 h-5 text-yellow-400" />
+                        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                            <Trophy className="w-6 h-6 text-primary" />
                             The First 48
                         </h2>
-                        <p className="text-sm text-muted-foreground">Complete your initiation quest.</p>
+                        <p className="text-muted-foreground mt-1">Complete these steps to unlock full access.</p>
                     </div>
-                    <div className="text-2xl font-bold text-gradient">
-                        {Math.round(progress)}%
+                    <div className="text-right">
+                        <div className="text-2xl font-bold text-primary">{Math.round(progress)}%</div>
+                        <div className="text-xs text-muted-foreground uppercase tracking-wider">Complete</div>
                     </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="h-2 bg-secondary rounded-full mb-8 overflow-hidden">
+                    <motion.div
+                        className="h-full bg-primary"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress}%` }}
+                        transition={{ duration: 0.5, ease: "circOut" }}
+                    />
                 </div>
 
                 <div className="space-y-4">
@@ -166,33 +168,34 @@ export function OnboardingQuest() {
                             transition={{ delay: index * 0.1 }}
                             onClick={() => handleStepClick(step)}
                             className={cn(
-                                "group flex items-start gap-4 p-4 rounded-xl border transition-all cursor-pointer",
+                                "group relative p-4 rounded-xl border transition-all cursor-pointer",
                                 step.completed
-                                    ? "bg-primary/10 border-primary/20"
-                                    : "bg-secondary/30 border-white/5 hover:bg-secondary/50 hover:border-white/10"
+                                    ? "bg-secondary/50 border-transparent"
+                                    : "bg-card border-border hover:border-primary/50 hover:shadow-md"
                             )}
                         >
-                            <div className="mt-1">
-                                {step.completed ? (
-                                    <CheckCircle2 className="w-6 h-6 text-primary" />
-                                ) : step.type === "video" ? (
-                                    <div className="w-6 h-6 rounded-full border-2 border-muted-foreground flex items-center justify-center group-hover:border-primary transition-colors">
-                                        <Play className="w-3 h-3 text-muted-foreground group-hover:text-primary fill-current" />
+                            <div className="flex items-start gap-4">
+                                <div className="mt-1">
+                                    {step.completed ? (
+                                        <CheckCircle2 className="w-6 h-6 text-green-500" />
+                                    ) : (
+                                        <Circle className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                                    )}
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className={cn(
+                                        "font-semibold text-lg transition-colors",
+                                        step.completed ? "text-muted-foreground line-through" : "text-foreground group-hover:text-primary"
+                                    )}>
+                                        {step.title}
+                                    </h3>
+                                    <p className="text-muted-foreground text-sm mt-1">{step.description}</p>
+                                </div>
+                                {step.type === 'video' && !step.completed && (
+                                    <div className="bg-primary/10 p-2 rounded-full">
+                                        <Play className="w-4 h-4 text-primary fill-current" />
                                     </div>
-                                ) : (
-                                    <Circle className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
                                 )}
-                            </div>
-                            <div>
-                                <h3 className={cn(
-                                    "font-medium transition-colors",
-                                    step.completed ? "text-primary" : "text-white"
-                                )}>
-                                    {step.title}
-                                </h3>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                    {step.description}
-                                </p>
                             </div>
                         </motion.div>
                     ))}
@@ -222,39 +225,43 @@ export function OnboardingQuest() {
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-card border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl"
+                            className="bg-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl relative"
                         >
-                            <div className="flex items-center justify-between p-4 border-b border-white/10">
-                                <h3 className="font-bold text-white">Welcome Masterclass</h3>
-                                <button onClick={() => setActiveVideo(false)} className="text-muted-foreground hover:text-white">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => setActiveVideo(false)}
+                                className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
 
-                            <div className="aspect-video bg-black relative flex items-center justify-center group">
-                                {/* Simulated Video Content */}
-                                <div className="text-center">
-                                    <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4 backdrop-blur-md">
-                                        <Loader2 className="w-8 h-8 text-white animate-spin" />
+                            <div className="aspect-video bg-slate-900 relative flex items-center justify-center">
+                                {videoProgress < 100 ? (
+                                    <div className="text-center">
+                                        <Loader2 className="w-12 h-12 text-white animate-spin mx-auto mb-4" />
+                                        <p className="text-white font-medium">Watching Masterclass...</p>
                                     </div>
-                                    <p className="text-white/80 font-medium">Playing Masterclass...</p>
-                                    <p className="text-white/50 text-sm mt-2">Do not close this window</p>
-                                </div>
+                                ) : (
+                                    <div className="text-center">
+                                        <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                                        <p className="text-white text-xl font-bold">Lesson Complete!</p>
+                                    </div>
+                                )}
 
-                                {/* Progress Bar */}
-                                <div className="absolute bottom-0 left-0 w-full h-1 bg-white/20">
+                                {/* Progress Bar Overlay */}
+                                <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
                                     <motion.div
                                         className="h-full bg-primary"
-                                        style={{ width: `${videoProgress}% ` }}
+                                        style={{ width: `${videoProgress}%` }}
                                     />
                                 </div>
                             </div>
 
-                            <div className="p-4 bg-secondary/50 flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">
-                                    {videoProgress < 100 ? "Watching..." : "Completed!"}
-                                </span>
-                                <span className="font-mono text-white">{videoProgress}%</span>
+                            <div className="p-6 bg-white">
+                                <h3 className="text-xl font-bold text-slate-900 mb-2">Welcome Masterclass</h3>
+                                <p className="text-slate-600">
+                                    Learn the 3 secrets to getting the most out of this community.
+                                    Do not close this window until the video finishes.
+                                </p>
                             </div>
                         </motion.div>
                     </motion.div>
